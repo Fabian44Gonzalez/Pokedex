@@ -1,18 +1,17 @@
-// --- CONFIGURACIÓN ---
-const COLECCION_ID = "cartadex_amigo_2025_xyz"; // ← ¡Cambia por un ID único!
+const COLECCION_ID = "cartadex_amigo_2025_xyz";
 
-// --- VARIABLES ---
 let todasLasCartas = [];
 let cartasDesbloqueadas = new Set();
+let cartasPersonalizadas = [];
 
-// --- INICIAR ---
 document.addEventListener('DOMContentLoaded', () => {
   initModal();
+  initCrearCarta();
   cargarApp();
 });
 
-// --- CARGAR APP ---
 async function cargarApp() {
+  // Cargar cartas base
   try {
     const res = await fetch('data/cartas.json');
     if (!res.ok) throw new Error('cartas.json no encontrado');
@@ -20,25 +19,39 @@ async function cargarApp() {
     document.getElementById('total').textContent = todasLasCartas.length;
   } catch (err) {
     console.error('Error al cargar cartas.json:', err);
-    document.getElementById('galeria-cartas').innerHTML = '<p style="color:#f00;text-align:center;">❌ cartas.json no cargado</p>';
-    return;
+    todasLasCartas = [];
+    document.getElementById('total').textContent = '0';
   }
 
+  // Cargar progreso y cartas personalizadas
   try {
     const db = firebase.firestore();
-    const doc = await db.collection('publico').doc(COLECCION_ID).get();
-    if (doc.exists) {
-      const data = doc.data();
+    
+    const docProgreso = await db.collection('publico').doc(COLECCION_ID).get();
+    if (docProgreso.exists) {
+      const data = docProgreso.data();
       cartasDesbloqueadas = new Set(data.cartas || []);
     }
+
+    const snapCartas = await db
+      .collection('cartasPersonalizadas')
+      .where('creador', '==', COLECCION_ID)
+      .get();
+    
+    cartasPersonalizadas = [];
+    snapCartas.forEach(doc => {
+      cartasPersonalizadas.push({
+        id: doc.id,
+        ...doc.data()
+      });
+    });
   } catch (err) {
-    console.warn('No se pudo cargar el progreso:', err);
+    console.warn('No se pudo cargar datos de Firebase:', err);
   }
 
   renderizarTodo();
 }
 
-// --- RENDERIZAR ---
 function renderizarTodo() {
   renderizarCartas();
   actualizarEstadisticas();
@@ -48,39 +61,60 @@ function renderizarCartas() {
   const galeria = document.getElementById('galeria-cartas');
   galeria.innerHTML = '';
 
+  // Cartas base
   todasLasCartas.forEach(carta => {
     const desbloqueada = cartasDesbloqueadas.has(carta.id);
-    const el = document.createElement('div');
-    el.className = `carta ${desbloqueada ? '' : 'bloqueada'}`;
-    el.innerHTML = `
-      <div class="carta-id">#${carta.id}</div>
-      <img src="${carta.imagen}" class="carta-imagen">
-      <div class="carta-nombre">${desbloqueada ? carta.nombre : '???'}</div>
-      <div class="carta-tipo">${desbloqueada ? carta.tipo : ''}</div>
-    `;
+    renderizarCarta(carta, desbloqueada, false);
+  });
 
-    // Solo las cartas bloqueadas responden al doble clic
-    if (!desbloqueada) {
-      el.addEventListener('dblclick', () => {
-        cartasDesbloqueadas.add(carta.id);
-        guardarProgreso();
-        renderizarTodo();
-      });
-    }
-
-    galeria.appendChild(el);
+  // Cartas personalizadas
+  cartasPersonalizadas.forEach(carta => {
+    renderizarCarta(carta, true, true);
   });
 }
 
+function renderizarCarta(carta, desbloqueada, esPersonalizada) {
+  const galeria = document.getElementById('galeria-cartas');
+  const el = document.createElement('div');
+  el.className = `carta ${desbloqueada ? '' : 'bloqueada'}`;
+  
+  const idMostrar = esPersonalizada 
+    ? `P-${carta.id.substring(0,4)}` 
+    : `#${carta.id}`;
+
+  const imagenSrc = carta.imagen || 'https://via.placeholder.com/100/555/fff?text=??';
+  
+  el.innerHTML = `
+    <div class="carta-id">${idMostrar}</div>
+    <img src="${imagenSrc}" class="carta-imagen">
+    <div class="carta-nombre">${desbloqueada ? carta.nombre : '???'}</div>
+    <div class="carta-tipo">${desbloqueada ? carta.tipo : ''}</div>
+  `;
+
+  if (!desbloqueada && !esPersonalizada) {
+    el.addEventListener('dblclick', () => {
+      cartasDesbloqueadas.add(carta.id);
+      guardarProgreso();
+      renderizarTodo();
+    });
+  }
+
+  galeria.appendChild(el);
+}
+
 function actualizarEstadisticas() {
-  const total = todasLasCartas.length;
-  const desbloq = cartasDesbloqueadas.size;
+  const totalBase = todasLasCartas.length;
+  const desbloqBase = cartasDesbloqueadas.size;
+  const totalPersonalizadas = cartasPersonalizadas.length;
+  
+  const total = totalBase;
+  const desbloq = desbloqBase + totalPersonalizadas;
+
   const pct = total ? Math.round((desbloq / total) * 100) : 0;
   document.getElementById('progreso').textContent = `${pct}%`;
   document.getElementById('desbloqueadas').textContent = desbloq;
 }
 
-// --- GUARDAR ---
 async function guardarProgreso() {
   try {
     const db = firebase.firestore();
@@ -89,12 +123,12 @@ async function guardarProgreso() {
       ultimaActualizacion: firebase.firestore.FieldValue.serverTimestamp()
     });
   } catch (err) {
-    console.error('Error al guardar:', err);
+    console.error('Error al guardar progreso:', err);
     alert('⚠️ No se pudo guardar. ¿Conexión a internet?');
   }
 }
 
-// --- MODAL ---
+// --- Modal: Añadir por ID ---
 function initModal() {
   const modal = document.getElementById('modal');
   const btnAbrir = document.getElementById('btn-agregar');
@@ -141,4 +175,57 @@ function initModal() {
   };
 
   input.onkeypress = (e) => { if (e.key === 'Enter') btnConfirmar.click(); };
+}
+
+// --- Modal: Crear carta ---
+function initCrearCarta() {
+  const modal = document.getElementById('modal-crear');
+  const btnAbrir = document.getElementById('btn-crear');
+  const btnCerrar = document.getElementById('cerrar-crear');
+  const btnGuardar = document.getElementById('btn-guardar-crear');
+  const nombre = document.getElementById('crear-nombre');
+  const tipo = document.getElementById('crear-tipo');
+  const imagen = document.getElementById('crear-imagen');
+  const msg = document.getElementById('mensaje-crear');
+
+  if (!btnAbrir || !modal) return;
+
+  btnAbrir.onclick = () => {
+    nombre.value = ''; tipo.value = ''; imagen.value = '';
+    msg.textContent = '';
+    modal.style.display = 'block';
+    nombre.focus();
+  };
+
+  btnCerrar?.onclick = () => modal.style.display = 'none';
+  modal.onclick = (e) => { if (e.target === modal) modal.style.display = 'none'; };
+
+  btnGuardar?.onclick = async () => {
+    const n = nombre.value.trim();
+    const t = tipo.value.trim();
+    if (!n || !t) {
+      msg.textContent = '⚠️ Nombre y tipo obligatorios';
+      return;
+    }
+
+    try {
+      const db = firebase.firestore();
+      await db.collection('cartasPersonalizadas').add({
+        nombre: n,
+        tipo: t,
+        imagen: imagen.value.trim() || null,
+        creador: COLECCION_ID,
+        fecha: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      
+      msg.textContent = '✅ ¡Carta creada!';
+      setTimeout(() => {
+        modal.style.display = 'none';
+        cargarApp();
+      }, 1000);
+    } catch (err) {
+      console.error('Error al crear carta:', err);
+      msg.textContent = '❌ Error al guardar';
+    }
+  };
 }

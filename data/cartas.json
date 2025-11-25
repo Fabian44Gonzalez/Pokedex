@@ -3,32 +3,54 @@
     "id": "001",
     "nombre": "Flamín",
     "tipo": "Fuego",
-    "descripcion": "Criatura ardiente que adora los atardeceres.",
-    "imagen": "https://via.placeholder.com/100/ff5733/ffffff?text=001",
-    "rareza": "Común"
+    "imagen": "https://via.placeholder.com/100/ff5733/ffffff?text=001"
   },
   {
     "id": "002",
     "nombre": "Acuarel",
     "tipo": "Agua",
-    "descripcion": "Nada en ríos helados y nunca se resfría.",
-    "imagen": "https://via.placeholder.com/100/3399ff/ffffff?text=002",
-    "rareza": "Rara"
+    "imagen": "https://via.placeholder.com/100/3399ff/ffffff?text=002"
   },
   {
     "id": "003",
     "nombre": "Folix",
     "tipo": "Planta",
-    "descripcion": "Se mueve solo cuando hay brisa suave.",
-    "imagen": "https://via.placeholder.com/100/4cff33/000000?text=003",
-    "rareza": "Épica"
+    "imagen": "https://via.placeholder.com/100/4cff33/000000?text=003"
   },
-{
+  {
     "id": "004",
-    "nombre": "Pepe",
-    "tipo": "Agua",
-    "descripcion": "Se mueve solo cuando hay brisa suave.",
-    "imagen": "https://via.placeholder.com/100/4cff33/000000?text=003",
-    "rareza": "Épica"
+    "nombre": "Voltik",
+    "tipo": "Eléctrico",
+    "imagen": "https://via.placeholder.com/100/FFD700/000000?text=004"
+  },
+  {
+    "id": "005",
+    "nombre": "Rocón",
+    "tipo": "Roca",
+    "imagen": "https://via.placeholder.com/100/8B4513/ffffff?text=005"
+  },
+  {
+    "id": "006",
+    "nombre": "Gelion",
+    "tipo": "Hielo",
+    "imagen": "https://via.placeholder.com/100/87CEEB/000000?text=006"
+  },
+  {
+    "id": "007",
+    "nombre": "Aerix",
+    "tipo": "Volador",
+    "imagen": "https://via.placeholder.com/100/ADD8E6/000000?text=007"
+  },
+  {
+    "id": "008",
+    "nombre": "Sombrix",
+    "tipo": "Siniestro",
+    "imagen": "https://via.placeholder.com/100/2F2F2F/ffffff?text=008"
+  },
+  {
+    "id": "009",
+    "nombre": "Luminar",
+    "tipo": "Psíquico",
+    "imagen": "https://via.placeholder.com/100/DA70D6/000000?text=009"
   }
 ]

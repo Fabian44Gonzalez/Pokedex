@@ -23,11 +23,12 @@
     </main>
 
     <footer>
-      <button id="btn-agregar">➕ Añadir carta por ID</button>
+      <button id="btn-agregar">➕ Añadir por ID</button>
+      <button id="btn-crear">✨ Crear nueva carta</button>
     </footer>
   </div>
 
-  <!-- Modal único -->
+  <!-- Modal: Añadir por ID -->
   <div id="modal" class="modal">
     <div class="modal-contenido">
       <span class="cerrar">&times;</span>
@@ -36,6 +37,19 @@
       <input type="text" id="input-id" placeholder="ID de la carta" maxlength="10" />
       <div id="mensaje-modal"></div>
       <button id="btn-confirmar">✅ Desbloquear</button>
+    </div>
+  </div>
+
+  <!-- Modal: Crear carta -->
+  <div id="modal-crear" class="modal">
+    <div class="modal-contenido">
+      <span class="cerrar" id="cerrar-crear">&times;</span>
+      <h3>Crear nueva carta</h3>
+      <input type="text" id="crear-nombre" placeholder="Nombre *" maxlength="30" />
+      <input type="text" id="crear-tipo" placeholder="Tipo *" maxlength="20" />
+      <input type="text" id="crear-imagen" placeholder="URL de imagen (opcional)" />
+      <div id="mensaje-crear"></div>
+      <button id="btn-guardar-crear">💾 Guardar carta</button>
     </div>
   </div>
 
