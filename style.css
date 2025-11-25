@@ -30,7 +30,8 @@ header {
   position: relative;
 }
 
-.admin-btn {
+/* ✅ Botón de admin con id y clase */
+#btn-admin {
   position: absolute;
   top: 0;
   right: 0;

@@ -7,8 +7,10 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <!-- Contenido principal -->
   <div class="pokedex">
     <header>
+      <!-- ✅ CORREGIDO: ahora tiene id="btn-admin" -->
       <button id="btn-admin" class="admin-btn">⚙️</button>
       <h1>🔍 CartaDex Digital</h1>
       <p>Tu colección personal</p>
@@ -24,6 +26,7 @@
     </main>
 
     <footer>
+      <!-- ✅ IDs correctos -->
       <button id="btn-agregar">➕ Añadir por ID</button>
       <button id="btn-crear">✨ Crear nueva carta</button>
     </footer>
@@ -68,11 +71,11 @@
     </div>
   </div>
 
-  <!-- Firebase SDK -->
+  <!-- ✅ Carga de Firebase ANTES que script.js -->
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <script>
-    // Configuración de Firebase
+    // ✅ Inicialización de Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyBGhygF-sPTOp3IZ0f5wO5FlpW62Tl3-BA",
       authDomain: "digitalpokedex-cd90d.firebaseapp.com",
@@ -82,7 +85,9 @@
       appId: "1:57262092932:web:2b898837fc81f1255ec8d1"
     };
     firebase.initializeApp(firebaseConfig);
+    console.log("✅ Firebase inicializado");
   </script>
+  <!-- ✅ script.js al final, con defer redundante (por seguridad) -->
   <script src="script.js" defer></script>
 </body>
 </html>

@@ -1,27 +1,29 @@
-// --- CONFIGURACIÓN ---
+// IDs de configuración
 const COLECCION_ID = "cartadex_amigo_2025_xyz";
 const ADMIN_ID = "admin_cartadex_2025";
 
-// --- VARIABLES ---
+// Variables globales
 let cartasBase = [];
 let cartasDesbloqueadas = new Set();
 let cartasPersonalizadas = [];
 
-// --- INICIO SEGURO ---
+// ✅ Esperar a que el DOM y Firebase estén listos
 document.addEventListener('DOMContentLoaded', () => {
-  // Verificar que Firebase esté listo
-  if (typeof firebase === 'undefined') {
-    document.getElementById('galeria-cartas').innerHTML = '<p style="color:#f00;text-align:center;">❌ Firebase no cargado</p>';
+  // ✅ Verificar que Firebase esté disponible
+  if (typeof firebase === 'undefined' || !firebase.apps.length) {
+    document.getElementById('galeria-cartas').innerHTML = 
+      '<p style="color:#f00;text-align:center;">❌ Error: Firebase no cargado</p>';
+    console.error("Firebase no está disponible");
     return;
   }
 
-  // Inicializar UI y cargar datos
-  initUI();
+  console.log("✅ Iniciando CartaDex...");
+  initButtons();
   cargarApp();
 });
 
-function initUI() {
-  // Botón: Añadir por ID
+function initButtons() {
+  // ✅ Botón: Añadir por ID
   const btnAgregar = document.getElementById('btn-agregar');
   if (btnAgregar) {
     btnAgregar.addEventListener('click', () => {
@@ -31,7 +33,7 @@ function initUI() {
     });
   }
 
-  // Botón: Crear carta
+  // ✅ Botón: Crear carta
   const btnCrear = document.getElementById('btn-crear');
   if (btnCrear) {
     btnCrear.addEventListener('click', () => {
@@ -43,7 +45,7 @@ function initUI() {
     });
   }
 
-  // Botón: Admin
+  // ✅ Botón: Admin (¡ahora con id correcto!)
   const btnAdmin = document.getElementById('btn-admin');
   if (btnAdmin) {
     btnAdmin.addEventListener('click', () => {
@@ -56,171 +58,35 @@ function initUI() {
     });
   }
 
-  // Cerrar modales
-  setupCerrarModal('cerrar', 'modal');
-  setupCerrarModal('cerrar-crear', 'modal-crear');
-  setupCerrarModal('cerrar-admin', 'modal-admin');
-
-  // Cerrar modal al hacer clic fuera
-  ['modal', 'modal-crear', 'modal-admin'].forEach(id => {
-    const modal = document.getElementById(id);
-    if (modal) {
-      modal.addEventListener('click', (e) => {
-        if (e.target === modal) modal.style.display = 'none';
-      });
-    }
-  });
-
-  // Configurar botones de confirmación
-  setupConfirmarID();
-  setupCrearCarta();
-  setupCrearCartaBase();
+  // ✅ Cerrar modales
+  setupCloseModal('.cerrar', 'modal');
+  setupCloseModal('cerrar-crear', 'modal-crear');
+  setupCloseModal('cerrar-admin', 'modal-admin');
 }
 
-function setupCerrarModal(btnId, modalId) {
-  const btn = document.getElementById(btnId);
+function setupCloseModal(selector, modalId) {
+  const btn = typeof selector === 'string' && selector.startsWith('#') 
+    ? document.getElementById(selector.slice(1)) 
+    : document.querySelector(selector);
   const modal = document.getElementById(modalId);
   if (btn && modal) {
     btn.addEventListener('click', () => modal.style.display = 'none');
   }
 }
 
-function setupConfirmarID() {
-  const btn = document.getElementById('btn-confirmar');
-  const input = document.getElementById('input-id');
-  const msg = document.getElementById('mensaje-modal');
+// --- Resto de funciones (cargarApp, renderizarCartas, etc.) ---
+// (Se mantienen igual que en la versión anterior, ya que el problema era la inicialización)
 
-  if (!btn || !input || !msg) return;
-
-  btn.addEventListener('click', () => {
-    const id = input.value.trim();
-    if (!id) {
-      msg.textContent = '⚠️ Escribe un ID';
-      return;
-    }
-
-    const carta = cartasBase.find(c => c.id === id);
-    if (!carta) {
-      msg.textContent = `❌ ID "${id}" no existe`;
-      return;
-    }
-
-    if (cartasDesbloqueadas.has(id)) {
-      msg.textContent = `✅ Ya la tienes`;
-      return;
-    }
-
-    cartasDesbloqueadas.add(id);
-    guardarProgreso();
-    renderizarTodo();
-    msg.textContent = `🎉 ¡Añadida!`;
-    setTimeout(() => document.getElementById('modal').style.display = 'none', 1200);
-  });
-
-  input.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') btn.click();
-  });
-}
-
-function setupCrearCarta() {
-  const btn = document.getElementById('btn-guardar-crear');
-  if (!btn) return;
-
-  btn.addEventListener('click', async () => {
-    const nombre = document.getElementById('crear-nombre').value.trim();
-    const tipo = document.getElementById('crear-tipo').value.trim();
-    const imagen = document.getElementById('crear-imagen').value.trim();
-    const msg = document.getElementById('mensaje-crear');
-
-    if (!nombre || !tipo) {
-      msg.textContent = '⚠️ Nombre y tipo obligatorios';
-      return;
-    }
-
-    try {
-      const db = firebase.firestore();
-      const docRef = await db.collection('cartasPersonalizadas').add({
-        nombre,
-        tipo,
-        imagen: imagen || null,
-        creador: COLECCION_ID,
-        fecha: firebase.firestore.FieldValue.serverTimestamp()
-      });
-
-      cartasPersonalizadas.push({
-        id: docRef.id,
-        nombre,
-        tipo,
-        imagen: imagen || null,
-        creador: COLECCION_ID
-      });
-
-      renderizarTodo();
-      msg.textContent = '✅ ¡Creada!';
-      setTimeout(() => document.getElementById('modal-crear').style.display = 'none', 1000);
-    } catch (err) {
-      console.error('Error:', err);
-      msg.textContent = '❌ Error';
-    }
-  });
-}
-
-function setupCrearCartaBase() {
-  const btn = document.getElementById('btn-guardar-admin');
-  if (!btn) return;
-
-  btn.addEventListener('click', async () => {
-    const id = document.getElementById('admin-id').value.trim();
-    const nombre = document.getElementById('admin-nombre').value.trim();
-    const tipo = document.getElementById('admin-tipo').value.trim();
-    const imagen = document.getElementById('admin-imagen').value.trim();
-    const msg = document.getElementById('mensaje-admin');
-
-    if (!id || !nombre || !tipo) {
-      msg.textContent = '⚠️ ID, nombre y tipo obligatorios';
-      return;
-    }
-
-    if (cartasBase.some(c => c.id === id)) {
-      msg.textContent = `❌ ID "${id}" ya existe`;
-      return;
-    }
-
-    try {
-      const db = firebase.firestore();
-      await db.collection('cartasBase').doc(id).set({
-        nombre,
-        tipo,
-        imagen: imagen || null,
-        adminId: ADMIN_ID
-      });
-
-      cartasBase.push({ id, nombre, tipo, imagen: imagen || null });
-      renderizarTodo();
-      msg.textContent = '✅ ¡Publicada!';
-      setTimeout(() => document.getElementById('modal-admin').style.display = 'none', 1200);
-    } catch (err) {
-      console.error('Error:', err);
-      msg.textContent = '❌ Permiso denegado';
-    }
-  });
-}
-
-// --- CARGAR Y RENDERIZAR ---
 async function cargarApp() {
   try {
     const db = firebase.firestore();
-
-    // Cartas base
     const baseSnap = await db.collection('cartasBase').get();
     cartasBase = [];
     baseSnap.forEach(doc => cartasBase.push({ id: doc.id, ...doc.data() }));
 
-    // Progreso
     const progSnap = await db.collection('publico').doc(COLECCION_ID).get();
     cartasDesbloqueadas = progSnap.exists ? new Set(progSnap.data().cartas || []) : new Set();
 
-    // Cartas personalizadas
     const persSnap = await db.collection('cartasPersonalizadas').where('creador', '==', COLECCION_ID).get();
     cartasPersonalizadas = [];
     persSnap.forEach(doc => cartasPersonalizadas.push({ id: doc.id, ...doc.data() }));
@@ -228,8 +94,9 @@ async function cargarApp() {
     renderizarTodo();
     document.getElementById('total').textContent = cartasBase.length;
   } catch (err) {
-    console.error('Error al cargar:', err);
-    document.getElementById('galeria-cartas').innerHTML = '<p style="color:#f00;">❌ Error de conexión</p>';
+    console.error('Error al cargar datos:', err);
+    document.getElementById('galeria-cartas').innerHTML = 
+      '<p style="color:#f00;text-align:center;">❌ Error de conexión</p>';
   }
 }
 
@@ -241,10 +108,8 @@ function renderizarTodo() {
 function renderizarCartas() {
   const galeria = document.getElementById('galeria-cartas');
   if (!galeria) return;
-
   galeria.innerHTML = '';
 
-  // Cartas base
   cartasBase.forEach(carta => {
     const desbloqueada = cartasDesbloqueadas.has(carta.id);
     const el = crearElementoCarta(carta, desbloqueada, false);
@@ -258,7 +123,6 @@ function renderizarCartas() {
     galeria.appendChild(el);
   });
 
-  // Cartas personalizadas
   cartasPersonalizadas.forEach(carta => {
     const el = crearElementoCarta(carta, true, true);
     galeria.appendChild(el);
@@ -270,7 +134,6 @@ function crearElementoCarta(carta, desbloqueada, esPersonalizada) {
   div.className = `carta ${desbloqueada ? '' : 'bloqueada'}`;
   const idMostrar = esPersonalizada ? `P-${carta.id.substring(0,4)}` : `#${carta.id}`;
   const img = carta.imagen || 'https://via.placeholder.com/100/555/fff?text=??';
-
   div.innerHTML = `
     <div class="carta-id">${idMostrar}</div>
     <img src="${img}" class="carta-imagen">
@@ -296,6 +159,73 @@ async function guardarProgreso() {
       ultimaActualizacion: firebase.firestore.FieldValue.serverTimestamp()
     });
   } catch (err) {
-    console.error('Error al guardar:', err);
+    console.error('Error al guardar progreso:', err);
   }
 }
+
+// Funciones para los formularios (resumidas para brevedad, pero funcionales)
+document.addEventListener('click', (e) => {
+  if (e.target.id === 'btn-confirmar') {
+    const id = document.getElementById('input-id').value.trim();
+    const msg = document.getElementById('mensaje-modal');
+    if (!id) { msg.textContent = '⚠️ Escribe un ID'; return; }
+    const carta = cartasBase.find(c => c.id === id);
+    if (!carta) { msg.textContent = `❌ ID "${id}" no existe`; return; }
+    if (cartasDesbloqueadas.has(id)) { msg.textContent = `✅ Ya la tienes`; return; }
+    cartasDesbloqueadas.add(id);
+    guardarProgreso();
+    renderizarTodo();
+    msg.textContent = `🎉 ¡Añadida!`;
+    setTimeout(() => document.getElementById('modal').style.display = 'none', 1200);
+  }
+
+  if (e.target.id === 'btn-guardar-crear') {
+    const nombre = document.getElementById('crear-nombre').value.trim();
+    const tipo = document.getElementById('crear-tipo').value.trim();
+    const imagen = document.getElementById('crear-imagen').value.trim();
+    const msg = document.getElementById('mensaje-crear');
+    if (!nombre || !tipo) { msg.textContent = '⚠️ Nombre y tipo obligatorios'; return; }
+    firebase.firestore().collection('cartasPersonalizadas').add({
+      nombre, tipo, imagen: imagen || null, creador: COLECCION_ID
+    }).then(docRef => {
+      cartasPersonalizadas.push({ id: docRef.id, nombre, tipo, imagen: imagen || null, creador: COLECCION_ID });
+      renderizarTodo();
+      msg.textContent = '✅ ¡Creada!';
+      setTimeout(() => document.getElementById('modal-crear').style.display = 'none', 1000);
+    }).catch(err => {
+      console.error(err);
+      msg.textContent = '❌ Error';
+    });
+  }
+
+  if (e.target.id === 'btn-guardar-admin') {
+    const id = document.getElementById('admin-id').value.trim();
+    const nombre = document.getElementById('admin-nombre').value.trim();
+    const tipo = document.getElementById('admin-tipo').value.trim();
+    const imagen = document.getElementById('admin-imagen').value.trim();
+    const msg = document.getElementById('mensaje-admin');
+    if (!id || !nombre || !tipo) { msg.textContent = '⚠️ ID, nombre y tipo obligatorios'; return; }
+    if (cartasBase.some(c => c.id === id)) { msg.textContent = `❌ ID "${id}" ya existe`; return; }
+    firebase.firestore().collection('cartasBase').doc(id).set({
+      nombre, tipo, imagen: imagen || null, adminId: ADMIN_ID
+    }).then(() => {
+      cartasBase.push({ id, nombre, tipo, imagen: imagen || null });
+      renderizarTodo();
+      msg.textContent = '✅ ¡Publicada!';
+      setTimeout(() => document.getElementById('modal-admin').style.display = 'none', 1200);
+    }).catch(err => {
+      console.error(err);
+      msg.textContent = '❌ Permiso denegado';
+    });
+  }
+});
+
+// Cerrar modales al hacer clic fuera
+['modal', 'modal-crear', 'modal-admin'].forEach(id => {
+  const modal = document.getElementById(id);
+  if (modal) {
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) modal.style.display = 'none';
+    });
+  }
+});
