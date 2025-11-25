@@ -1,147 +1,98 @@
+// --- CONFIGURACIÓN ---
 const COLECCION_ID = "cartadex_amigo_2025_xyz";
 const ADMIN_ID = "admin_cartadex_2025";
 
+// --- VARIABLES ---
 let cartasBase = [];
 let cartasDesbloqueadas = new Set();
 let cartasPersonalizadas = [];
 
+// --- INICIO SEGURO ---
 document.addEventListener('DOMContentLoaded', () => {
-  initModal();
-  initCrearCarta();
-  initAdminPanel();
+  // Verificar que Firebase esté listo
+  if (typeof firebase === 'undefined') {
+    document.getElementById('galeria-cartas').innerHTML = '<p style="color:#f00;text-align:center;">❌ Firebase no cargado</p>';
+    return;
+  }
+
+  // Inicializar UI y cargar datos
+  initUI();
   cargarApp();
 });
 
-async function cargarApp() {
-  try {
-    const db = firebase.firestore();
-    
-    // Cargar cartas base
-    const snapBase = await db.collection('cartasBase').get();
-    cartasBase = [];
-    snapBase.forEach(doc => {
-      cartasBase.push({ id: doc.id, ...doc.data() });
+function initUI() {
+  // Botón: Añadir por ID
+  const btnAgregar = document.getElementById('btn-agregar');
+  if (btnAgregar) {
+    btnAgregar.addEventListener('click', () => {
+      document.getElementById('input-id').value = '';
+      document.getElementById('mensaje-modal').textContent = '';
+      document.getElementById('modal').style.display = 'block';
     });
+  }
 
-    // Cargar progreso
-    const docProgreso = await db.collection('publico').doc(COLECCION_ID).get();
-    if (docProgreso.exists) {
-      const data = docProgreso.data();
-      cartasDesbloqueadas = new Set(data.cartas || []);
+  // Botón: Crear carta
+  const btnCrear = document.getElementById('btn-crear');
+  if (btnCrear) {
+    btnCrear.addEventListener('click', () => {
+      document.getElementById('crear-nombre').value = '';
+      document.getElementById('crear-tipo').value = '';
+      document.getElementById('crear-imagen').value = '';
+      document.getElementById('mensaje-crear').textContent = '';
+      document.getElementById('modal-crear').style.display = 'block';
+    });
+  }
+
+  // Botón: Admin
+  const btnAdmin = document.getElementById('btn-admin');
+  if (btnAdmin) {
+    btnAdmin.addEventListener('click', () => {
+      document.getElementById('admin-id').value = '';
+      document.getElementById('admin-nombre').value = '';
+      document.getElementById('admin-tipo').value = '';
+      document.getElementById('admin-imagen').value = '';
+      document.getElementById('mensaje-admin').textContent = '';
+      document.getElementById('modal-admin').style.display = 'block';
+    });
+  }
+
+  // Cerrar modales
+  setupCerrarModal('cerrar', 'modal');
+  setupCerrarModal('cerrar-crear', 'modal-crear');
+  setupCerrarModal('cerrar-admin', 'modal-admin');
+
+  // Cerrar modal al hacer clic fuera
+  ['modal', 'modal-crear', 'modal-admin'].forEach(id => {
+    const modal = document.getElementById(id);
+    if (modal) {
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) modal.style.display = 'none';
+      });
     }
-
-    // Cargar cartas personalizadas
-    const snapPersonalizadas = await db
-      .collection('cartasPersonalizadas')
-      .where('creador', '==', COLECCION_ID)
-      .get();
-    cartasPersonalizadas = [];
-    snapPersonalizadas.forEach(doc => {
-      cartasPersonalizadas.push({ id: doc.id, ...doc.data() });
-    });
-
-    renderizarTodo();
-    document.getElementById('total').textContent = cartasBase.length;
-  } catch (err) {
-    console.error('Error al cargar datos:', err);
-    document.getElementById('galeria-cartas').innerHTML = '<p style="color:#f00;text-align:center;">❌ Error de conexión con Firebase</p>';
-  }
-}
-
-function renderizarTodo() {
-  renderizarCartas();
-  actualizarEstadisticas();
-}
-
-function renderizarCartas() {
-  const galeria = document.getElementById('galeria-cartas');
-  galeria.innerHTML = '';
-
-  // Cartas base
-  cartasBase.forEach(carta => {
-    const desbloqueada = cartasDesbloqueadas.has(carta.id);
-    renderizarCarta(carta, desbloqueada, false);
   });
 
-  // Cartas personalizadas
-  cartasPersonalizadas.forEach(carta => {
-    renderizarCarta(carta, true, true);
-  });
+  // Configurar botones de confirmación
+  setupConfirmarID();
+  setupCrearCarta();
+  setupCrearCartaBase();
 }
 
-function renderizarCarta(carta, desbloqueada, esPersonalizada) {
-  const galeria = document.getElementById('galeria-cartas');
-  const el = document.createElement('div');
-  el.className = `carta ${desbloqueada ? '' : 'bloqueada'}`;
-  
-  const idMostrar = esPersonalizada 
-    ? `P-${carta.id.substring(0, 4)}`
-    : `#${carta.id}`;
-
-  const imgSrc = carta.imagen || 'https://via.placeholder.com/100/555/fff?text=??';
-
-  el.innerHTML = `
-    <div class="carta-id">${idMostrar}</div>
-    <img src="${imgSrc}" class="carta-imagen" alt="${carta.nombre || 'Carta'}">
-    <div class="carta-nombre">${desbloqueada ? carta.nombre : '???'}</div>
-    <div class="carta-tipo">${desbloqueada ? carta.tipo : ''}</div>
-  `;
-
-  if (!desbloqueada && !esPersonalizada) {
-    el.addEventListener('dblclick', () => {
-      cartasDesbloqueadas.add(carta.id);
-      guardarProgreso();
-      renderizarTodo();
-    });
-  }
-
-  galeria.appendChild(el);
-}
-
-function actualizarEstadisticas() {
-  const totalBase = cartasBase.length;
-  const totalDesbloqueadas = cartasDesbloqueadas.size + cartasPersonalizadas.length;
-  const porcentaje = totalBase ? Math.round((totalDesbloqueadas / totalBase) * 100) : 0;
-
-  document.getElementById('progreso').textContent = `${porcentaje}%`;
-  document.getElementById('desbloqueadas').textContent = totalDesbloqueadas;
-}
-
-async function guardarProgreso() {
-  try {
-    const db = firebase.firestore();
-    await db.collection('publico').doc(COLECCION_ID).set({
-      cartas: [...cartasDesbloqueadas],
-      ultimaActualizacion: firebase.firestore.FieldValue.serverTimestamp()
-    });
-  } catch (err) {
-    console.error('Error al guardar progreso:', err);
-    alert('⚠️ No se pudo guardar el progreso.');
+function setupCerrarModal(btnId, modalId) {
+  const btn = document.getElementById(btnId);
+  const modal = document.getElementById(modalId);
+  if (btn && modal) {
+    btn.addEventListener('click', () => modal.style.display = 'none');
   }
 }
 
-// --- Modal: Añadir por ID ---
-function initModal() {
-  const modal = document.getElementById('modal');
-  const btnAbrir = document.getElementById('btn-agregar');
-  const btnCerrar = document.querySelector('.cerrar');
-  const btnConfirmar = document.getElementById('btn-confirmar');
+function setupConfirmarID() {
+  const btn = document.getElementById('btn-confirmar');
   const input = document.getElementById('input-id');
   const msg = document.getElementById('mensaje-modal');
 
-  if (!btnAbrir || !modal || !btnConfirmar || !input || !msg) return;
+  if (!btn || !input || !msg) return;
 
-  btnAbrir.onclick = () => {
-    input.value = '';
-    msg.textContent = '';
-    modal.style.display = 'block';
-    input.focus();
-  };
-
-  btnCerrar.onclick = () => modal.style.display = 'none';
-  modal.onclick = (e) => { if (e.target === modal) modal.style.display = 'none'; };
-
-  btnConfirmar.onclick = () => {
+  btn.addEventListener('click', () => {
     const id = input.value.trim();
     if (!id) {
       msg.textContent = '⚠️ Escribe un ID';
@@ -155,47 +106,33 @@ function initModal() {
     }
 
     if (cartasDesbloqueadas.has(id)) {
-      msg.textContent = `✅ Ya tienes la carta #${id}`;
+      msg.textContent = `✅ Ya la tienes`;
       return;
     }
 
     cartasDesbloqueadas.add(id);
     guardarProgreso();
     renderizarTodo();
-    msg.textContent = `🎉 ¡Carta #${id} desbloqueada!`;
-    setTimeout(() => modal.style.display = 'none', 1200);
-  };
+    msg.textContent = `🎉 ¡Añadida!`;
+    setTimeout(() => document.getElementById('modal').style.display = 'none', 1200);
+  });
 
-  input.onkeypress = (e) => { if (e.key === 'Enter') btnConfirmar.click(); };
+  input.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') btn.click();
+  });
 }
 
-// --- Modal: Crear carta personalizada ---
-function initCrearCarta() {
-  const modal = document.getElementById('modal-crear');
-  const btnAbrir = document.getElementById('btn-crear');
-  const btnCerrar = document.getElementById('cerrar-crear');
-  const btnGuardar = document.getElementById('btn-guardar-crear');
-  const nombre = document.getElementById('crear-nombre');
-  const tipo = document.getElementById('crear-tipo');
-  const imagen = document.getElementById('crear-imagen');
-  const msg = document.getElementById('mensaje-crear');
+function setupCrearCarta() {
+  const btn = document.getElementById('btn-guardar-crear');
+  if (!btn) return;
 
-  if (!btnAbrir || !modal) return;
+  btn.addEventListener('click', async () => {
+    const nombre = document.getElementById('crear-nombre').value.trim();
+    const tipo = document.getElementById('crear-tipo').value.trim();
+    const imagen = document.getElementById('crear-imagen').value.trim();
+    const msg = document.getElementById('mensaje-crear');
 
-  btnAbrir.onclick = () => {
-    nombre.value = ''; tipo.value = ''; imagen.value = '';
-    msg.textContent = '';
-    modal.style.display = 'block';
-    nombre.focus();
-  };
-
-  btnCerrar?.onclick = () => modal.style.display = 'none';
-  modal.onclick = (e) => { if (e.target === modal) modal.style.display = 'none'; };
-
-  btnGuardar?.onclick = async () => {
-    const n = nombre.value.trim();
-    const t = tipo.value.trim();
-    if (!n || !t) {
+    if (!nombre || !tipo) {
       msg.textContent = '⚠️ Nombre y tipo obligatorios';
       return;
     }
@@ -203,99 +140,162 @@ function initCrearCarta() {
     try {
       const db = firebase.firestore();
       const docRef = await db.collection('cartasPersonalizadas').add({
-        nombre: n,
-        tipo: t,
-        imagen: imagen.value.trim() || null,
+        nombre,
+        tipo,
+        imagen: imagen || null,
         creador: COLECCION_ID,
         fecha: firebase.firestore.FieldValue.serverTimestamp()
       });
 
       cartasPersonalizadas.push({
         id: docRef.id,
-        nombre: n,
-        tipo: t,
-        imagen: imagen.value.trim() || null,
+        nombre,
+        tipo,
+        imagen: imagen || null,
         creador: COLECCION_ID
       });
 
       renderizarTodo();
-      msg.textContent = '✅ ¡Carta personalizada creada!';
-      setTimeout(() => {
-        modal.style.display = 'none';
-      }, 1000);
+      msg.textContent = '✅ ¡Creada!';
+      setTimeout(() => document.getElementById('modal-crear').style.display = 'none', 1000);
     } catch (err) {
-      console.error('Error al crear carta personalizada:', err);
-      msg.textContent = '❌ Error al guardar';
+      console.error('Error:', err);
+      msg.textContent = '❌ Error';
     }
-  };
+  });
 }
 
-// --- Panel de administración: crear carta base ---
-function initAdminPanel() {
-  const btnAdmin = document.getElementById('btn-admin');
-  const modal = document.getElementById('modal-admin');
-  const btnCerrar = document.getElementById('cerrar-admin');
-  const btnGuardar = document.getElementById('btn-guardar-admin');
-  const idInput = document.getElementById('admin-id');
-  const nombreInput = document.getElementById('admin-nombre');
-  const tipoInput = document.getElementById('admin-tipo');
-  const imagenInput = document.getElementById('admin-imagen');
-  const msg = document.getElementById('mensaje-admin');
+function setupCrearCartaBase() {
+  const btn = document.getElementById('btn-guardar-admin');
+  if (!btn) return;
 
-  if (!btnAdmin || !modal) return;
-
-  btnAdmin.onclick = () => {
-    idInput.value = '';
-    nombreInput.value = '';
-    tipoInput.value = '';
-    imagenInput.value = '';
-    msg.textContent = '';
-    modal.style.display = 'block';
-    idInput.focus();
-  };
-
-  btnCerrar?.onclick = () => modal.style.display = 'none';
-  modal.onclick = (e) => { if (e.target === modal) modal.style.display = 'none'; };
-
-  btnGuardar?.onclick = async () => {
-    const id = idInput.value.trim();
-    const nombre = nombreInput.value.trim();
-    const tipo = tipoInput.value.trim();
+  btn.addEventListener('click', async () => {
+    const id = document.getElementById('admin-id').value.trim();
+    const nombre = document.getElementById('admin-nombre').value.trim();
+    const tipo = document.getElementById('admin-tipo').value.trim();
+    const imagen = document.getElementById('admin-imagen').value.trim();
+    const msg = document.getElementById('mensaje-admin');
 
     if (!id || !nombre || !tipo) {
-      msg.textContent = '⚠️ ID, nombre y tipo son obligatorios';
+      msg.textContent = '⚠️ ID, nombre y tipo obligatorios';
       return;
     }
 
     if (cartasBase.some(c => c.id === id)) {
-      msg.textContent = `❌ El ID "${id}" ya existe`;
+      msg.textContent = `❌ ID "${id}" ya existe`;
       return;
     }
 
     try {
       const db = firebase.firestore();
       await db.collection('cartasBase').doc(id).set({
-        nombre: nombre,
-        tipo: tipo,
-        imagen: imagenInput.value.trim() || null,
+        nombre,
+        tipo,
+        imagen: imagen || null,
         adminId: ADMIN_ID
       });
 
-      cartasBase.push({
-        id: id,
-        nombre: nombre,
-        tipo: tipo,
-        imagen: imagenInput.value.trim() || null
-      });
-
+      cartasBase.push({ id, nombre, tipo, imagen: imagen || null });
       renderizarTodo();
-      msg.textContent = '✅ ¡Carta base publicada!';
-      setTimeout(() => {
-        modal.style.display = 'none';
-      }, 1200);
+      msg.textContent = '✅ ¡Publicada!';
+      setTimeout(() => document.getElementById('modal-admin').style.display = 'none', 1200);
     } catch (err) {
-      console.error('Error al crear carta base:', err);
-      msg.textContent = '❌ Permiso denegado. ¿ADMIN_ID correcto?';
+      console.error('Error:', err);
+      msg.textContent = '❌ Permiso denegado';
     }
-  };
+  });
+}
+
+// --- CARGAR Y RENDERIZAR ---
+async function cargarApp() {
+  try {
+    const db = firebase.firestore();
+
+    // Cartas base
+    const baseSnap = await db.collection('cartasBase').get();
+    cartasBase = [];
+    baseSnap.forEach(doc => cartasBase.push({ id: doc.id, ...doc.data() }));
+
+    // Progreso
+    const progSnap = await db.collection('publico').doc(COLECCION_ID).get();
+    cartasDesbloqueadas = progSnap.exists ? new Set(progSnap.data().cartas || []) : new Set();
+
+    // Cartas personalizadas
+    const persSnap = await db.collection('cartasPersonalizadas').where('creador', '==', COLECCION_ID).get();
+    cartasPersonalizadas = [];
+    persSnap.forEach(doc => cartasPersonalizadas.push({ id: doc.id, ...doc.data() }));
+
+    renderizarTodo();
+    document.getElementById('total').textContent = cartasBase.length;
+  } catch (err) {
+    console.error('Error al cargar:', err);
+    document.getElementById('galeria-cartas').innerHTML = '<p style="color:#f00;">❌ Error de conexión</p>';
+  }
+}
+
+function renderizarTodo() {
+  renderizarCartas();
+  actualizarEstadisticas();
+}
+
+function renderizarCartas() {
+  const galeria = document.getElementById('galeria-cartas');
+  if (!galeria) return;
+
+  galeria.innerHTML = '';
+
+  // Cartas base
+  cartasBase.forEach(carta => {
+    const desbloqueada = cartasDesbloqueadas.has(carta.id);
+    const el = crearElementoCarta(carta, desbloqueada, false);
+    if (!desbloqueada) {
+      el.addEventListener('dblclick', () => {
+        cartasDesbloqueadas.add(carta.id);
+        guardarProgreso();
+        renderizarTodo();
+      });
+    }
+    galeria.appendChild(el);
+  });
+
+  // Cartas personalizadas
+  cartasPersonalizadas.forEach(carta => {
+    const el = crearElementoCarta(carta, true, true);
+    galeria.appendChild(el);
+  });
+}
+
+function crearElementoCarta(carta, desbloqueada, esPersonalizada) {
+  const div = document.createElement('div');
+  div.className = `carta ${desbloqueada ? '' : 'bloqueada'}`;
+  const idMostrar = esPersonalizada ? `P-${carta.id.substring(0,4)}` : `#${carta.id}`;
+  const img = carta.imagen || 'https://via.placeholder.com/100/555/fff?text=??';
+
+  div.innerHTML = `
+    <div class="carta-id">${idMostrar}</div>
+    <img src="${img}" class="carta-imagen">
+    <div class="carta-nombre">${desbloqueada ? carta.nombre : '???'}</div>
+    <div class="carta-tipo">${desbloqueada ? carta.tipo : ''}</div>
+  `;
+  return div;
+}
+
+function actualizarEstadisticas() {
+  const total = cartasBase.length;
+  const desbloq = cartasDesbloqueadas.size + cartasPersonalizadas.length;
+  const pct = total ? Math.round((desbloq / total) * 100) : 0;
+  document.getElementById('progreso')?.textContent = `${pct}%`;
+  document.getElementById('desbloqueadas')?.textContent = desbloq;
+}
+
+async function guardarProgreso() {
+  try {
+    const db = firebase.firestore();
+    await db.collection('publico').doc(COLECCION_ID).set({
+      cartas: [...cartasDesbloqueadas],
+      ultimaActualizacion: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  } catch (err) {
+    console.error('Error al guardar:', err);
+  }
 }

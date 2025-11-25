@@ -9,7 +9,7 @@
 <body>
   <div class="pokedex">
     <header>
-      <button id="btn-admin">⚙️</button>
+      <button id="btn-admin" class="admin-btn">⚙️</button>
       <h1>🔍 CartaDex Digital</h1>
       <p>Tu colección personal</p>
     </header>
@@ -34,14 +34,14 @@
     <div class="modal-contenido">
       <span class="cerrar">&times;</span>
       <h3>Añadir carta</h3>
-      <p>Ingresa el ID de la carta (ej: 001)</p>
-      <input type="text" id="input-id" placeholder="ID de la carta" maxlength="10" />
+      <p>Ingresa el ID de la carta</p>
+      <input type="text" id="input-id" placeholder="Ej: 001" maxlength="10" />
       <div id="mensaje-modal"></div>
       <button id="btn-confirmar">✅ Desbloquear</button>
     </div>
   </div>
 
-  <!-- Modal: Crear carta personalizada -->
+  <!-- Modal: Crear carta -->
   <div id="modal-crear" class="modal">
     <div class="modal-contenido">
       <span class="cerrar" id="cerrar-crear">&times;</span>
@@ -50,11 +50,11 @@
       <input type="text" id="crear-tipo" placeholder="Tipo *" maxlength="20" />
       <input type="text" id="crear-imagen" placeholder="URL de imagen (opcional)" />
       <div id="mensaje-crear"></div>
-      <button id="btn-guardar-crear">💾 Guardar carta</button>
+      <button id="btn-guardar-crear">💾 Guardar</button>
     </div>
   </div>
 
-  <!-- Modal: Admin - Crear carta base -->
+  <!-- Modal: Admin -->
   <div id="modal-admin" class="modal">
     <div class="modal-contenido">
       <span class="cerrar" id="cerrar-admin">&times;</span>
@@ -64,14 +64,15 @@
       <input type="text" id="admin-tipo" placeholder="Tipo *" maxlength="20" />
       <input type="text" id="admin-imagen" placeholder="URL de imagen" />
       <div id="mensaje-admin"></div>
-      <button id="btn-guardar-admin">💾 Publicar carta</button>
+      <button id="btn-guardar-admin">💾 Publicar</button>
     </div>
   </div>
 
-  <!-- Firebase -->
+  <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <script>
+    // Configuración de Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyBGhygF-sPTOp3IZ0f5wO5FlpW62Tl3-BA",
       authDomain: "digitalpokedex-cd90d.firebaseapp.com",
