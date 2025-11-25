@@ -19,13 +19,27 @@
     <main id="galeria-cartas">
       <p>Cargando colección...</p>
     </main>
+    <footer>
+      <button id="btn-agregar">➕ Añadir carta por ID</button>
+    </footer>
   </div>
 
-  <!-- Firebase SDK (solo Firestore) -->
+  <!-- Modal para añadir carta -->
+  <div id="modal" class="modal">
+    <div class="modal-contenido">
+      <span class="cerrar">&times;</span>
+      <h3>Añadir carta a tu colección</h3>
+      <p>Ingresa el <strong>ID</strong> de la carta (ej: 001, 002...)</p>
+      <input type="text" id="input-id" placeholder="Ej: 004" maxlength="10" />
+      <div id="mensaje-modal"></div>
+      <button id="btn-confirmar">✅ Desbloquear</button>
+    </div>
+  </div>
+
+  <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
-  <!-- Configuración de Firebase -->
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyBGhygF-sPTOp3IZ0f5wO5FlpW62Tl3-BA",

@@ -104,3 +104,88 @@ header p {
   font-size: 0.85rem;
   color: #888;
 }
+
+footer {
+  text-align: center;
+  margin-top: 20px;
+}
+
+button {
+  background: #000;
+  color: #0f0;
+  border: 2px solid #0f0;
+  padding: 8px 16px;
+  font-family: 'Courier New', monospace;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+button:hover {
+  background: #030;
+}
+
+/* --- Modal para añadir carta --- */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 100;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.8);
+}
+
+.modal-contenido {
+  background: #e50000;
+  margin: 10% auto;
+  padding: 20px;
+  border: 4px solid #000;
+  border-radius: 15px;
+  width: 90%;
+  max-width: 400px;
+  color: white;
+  text-align: center;
+  position: relative;
+}
+
+.cerrar {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  font-size: 28px;
+  font-weight: bold;
+  color: white;
+  cursor: pointer;
+}
+
+.cerrar:hover {
+  color: #ff0;
+}
+
+#input-id {
+  width: 100%;
+  padding: 8px;
+  margin: 10px 0;
+  border: 2px solid #0f0;
+  background: #000;
+  color: #0f0;
+  font-family: 'Courier New', monospace;
+  text-align: center;
+}
+
+#input-id::placeholder {
+  color: #444;
+}
+
+#mensaje-modal {
+  min-height: 1.2rem;
+  margin: 10px 0;
+  font-weight: bold;
+  color: #ff0;
+}
+
+#btn-confirmar {
+  margin-top: 10px;
+  padding: 10px 20px;
+}

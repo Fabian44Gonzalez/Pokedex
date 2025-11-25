@@ -1,23 +1,21 @@
-// ID SECRETO de la colección — ¡cámbialo por uno único!
-const COLECCION_ID = "cartadex_amigo_2025_xyz"; 
+const COLECCION_ID = "cartadex_amigo_2025_xyz";
 
 let todasLasCartas = [];
 let cartasDesbloqueadas = new Set();
 
-// Cargar cartas desde JSON
 async function cargarCartas() {
   try {
     const res = await fetch('data/cartas.json');
     todasLasCartas = await res.json();
     document.getElementById('total').textContent = todasLasCartas.length;
     cargarProgresoDesdeFirestore();
+    setupUI();
   } catch (error) {
     document.getElementById('galeria-cartas').innerHTML = '<p style="color:#f00;text-align:center;">❌ Error al cargar cartas.</p>';
     console.error('Error en cartas.json:', error);
   }
 }
 
-// Cargar progreso desde Firestore
 async function cargarProgresoDesdeFirestore() {
   const db = firebase.firestore();
   const docRef = db.collection('publico').doc(COLECCION_ID);
@@ -32,7 +30,6 @@ async function cargarProgresoDesdeFirestore() {
   actualizarEstadisticas();
 }
 
-// Guardar progreso en Firestore
 async function guardarProgresoEnFirestore() {
   const db = firebase.firestore();
   await db.collection('publico').doc(COLECCION_ID).set({
@@ -41,7 +38,6 @@ async function guardarProgresoEnFirestore() {
   });
 }
 
-// Renderizar cartas
 function renderizarCartas() {
   const galeria = document.getElementById('galeria-cartas');
   galeria.innerHTML = '';
@@ -70,7 +66,6 @@ function renderizarCartas() {
   });
 }
 
-// Actualizar estadísticas
 function actualizarEstadisticas() {
   const total = todasLasCartas.length;
   const desbloq = cartasDesbloqueadas.size;
@@ -80,7 +75,64 @@ function actualizarEstadisticas() {
   document.getElementById('desbloqueadas').textContent = desbloq;
 }
 
-// Iniciar la aplicación cuando se carga la página
+// --- NUEVO: Interfaz con modal ---
+function setupUI() {
+  const modal = document.getElementById('modal');
+  const btnAbrir = document.getElementById('btn-agregar');
+  const btnCerrar = document.querySelector('.cerrar');
+  const btnConfirmar = document.getElementById('btn-confirmar');
+  const inputId = document.getElementById('input-id');
+  const mensajeEl = document.getElementById('mensaje-modal');
+
+  // Abrir modal
+  btnAbrir.addEventListener('click', () => {
+    inputId.value = '';
+    mensajeEl.textContent = '';
+    modal.style.display = 'block';
+    inputId.focus();
+  });
+
+  // Cerrar modal
+  btnCerrar.addEventListener('click', () => {
+    modal.style.display = 'none';
+  });
+
+  // Cerrar al hacer clic fuera
+  window.addEventListener('click', (e) => {
+    if (e.target === modal) modal.style.display = 'none';
+  });
+
+  // Confirmar desbloqueo
+  btnConfirmar.addEventListener('click', () => {
+    const id = inputId.value.trim();
+    if (!id) {
+      mensajeEl.textContent = '⚠️ Ingresa un ID.';
+      return;
+    }
+
+    const carta = todasLasCartas.find(c => c.id === id);
+    if (carta) {
+      if (cartasDesbloqueadas.has(id)) {
+        mensajeEl.textContent = `✅ Ya tienes la carta #${id}.`;
+      } else {
+        cartasDesbloqueadas.add(id);
+        guardarProgresoEnFirestore();
+        renderizarCartas();
+        actualizarEstadisticas();
+        mensajeEl.textContent = `🎉 ¡Carta #${id} desbloqueada!`;
+        setTimeout(() => modal.style.display = 'none', 1500);
+      }
+    } else {
+      mensajeEl.textContent = `❌ ID "${id}" no válido.`;
+    }
+  });
+
+  // Permitir Enter en el input
+  inputId.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') btnConfirmar.click();
+  });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   cargarCartas();
 });
