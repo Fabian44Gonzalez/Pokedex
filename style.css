@@ -98,7 +98,6 @@ header h1 {
   color: #888;
 }
 
-/* Pista para doble clic */
 .carta.bloqueada:hover::after {
   content: "Doble clic para desbloquear";
   position: absolute;
@@ -133,7 +132,6 @@ button:hover {
   background: #030;
 }
 
-/* --- Modal --- */
 .modal {
   display: none;
   position: fixed;

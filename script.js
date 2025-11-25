@@ -1,6 +1,6 @@
 const COLECCION_ID = "cartadex_amigo_2025_xyz";
 
-let todasLasCartas = [];
+let cartasBase = [];
 let cartasDesbloqueadas = new Set();
 let cartasPersonalizadas = [];
 
@@ -11,45 +11,39 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 async function cargarApp() {
-  // Cargar cartas base
-  try {
-    const res = await fetch('data/cartas.json');
-    if (!res.ok) throw new Error('cartas.json no encontrado');
-    todasLasCartas = await res.json();
-    document.getElementById('total').textContent = todasLasCartas.length;
-  } catch (err) {
-    console.error('Error al cargar cartas.json:', err);
-    todasLasCartas = [];
-    document.getElementById('total').textContent = '0';
-  }
-
-  // Cargar progreso y cartas personalizadas
   try {
     const db = firebase.firestore();
     
+    // Cargar cartas base
+    const snapBase = await db.collection('cartasBase').get();
+    cartasBase = [];
+    snapBase.forEach(doc => {
+      cartasBase.push({ id: doc.id, ...doc.data() });
+    });
+
+    // Cargar progreso
     const docProgreso = await db.collection('publico').doc(COLECCION_ID).get();
     if (docProgreso.exists) {
       const data = docProgreso.data();
       cartasDesbloqueadas = new Set(data.cartas || []);
     }
 
-    const snapCartas = await db
+    // Cargar cartas personalizadas
+    const snapPersonalizadas = await db
       .collection('cartasPersonalizadas')
       .where('creador', '==', COLECCION_ID)
       .get();
-    
     cartasPersonalizadas = [];
-    snapCartas.forEach(doc => {
-      cartasPersonalizadas.push({
-        id: doc.id,
-        ...doc.data()
-      });
+    snapPersonalizadas.forEach(doc => {
+      cartasPersonalizadas.push({ id: doc.id, ...doc.data() });
     });
-  } catch (err) {
-    console.warn('No se pudo cargar datos de Firebase:', err);
-  }
 
-  renderizarTodo();
+    renderizarTodo();
+    document.getElementById('total').textContent = cartasBase.length;
+  } catch (err) {
+    console.error('Error al cargar datos:', err);
+    document.getElementById('galeria-cartas').innerHTML = '<p style="color:#f00;">❌ Error de conexión</p>';
+  }
 }
 
 function renderizarTodo() {
@@ -62,7 +56,7 @@ function renderizarCartas() {
   galeria.innerHTML = '';
 
   // Cartas base
-  todasLasCartas.forEach(carta => {
+  cartasBase.forEach(carta => {
     const desbloqueada = cartasDesbloqueadas.has(carta.id);
     renderizarCarta(carta, desbloqueada, false);
   });
@@ -103,13 +97,8 @@ function renderizarCarta(carta, desbloqueada, esPersonalizada) {
 }
 
 function actualizarEstadisticas() {
-  const totalBase = todasLasCartas.length;
-  const desbloqBase = cartasDesbloqueadas.size;
-  const totalPersonalizadas = cartasPersonalizadas.length;
-  
-  const total = totalBase;
-  const desbloq = desbloqBase + totalPersonalizadas;
-
+  const total = cartasBase.length;
+  const desbloq = cartasDesbloqueadas.size + cartasPersonalizadas.length;
   const pct = total ? Math.round((desbloq / total) * 100) : 0;
   document.getElementById('progreso').textContent = `${pct}%`;
   document.getElementById('desbloqueadas').textContent = desbloq;
@@ -124,7 +113,7 @@ async function guardarProgreso() {
     });
   } catch (err) {
     console.error('Error al guardar progreso:', err);
-    alert('⚠️ No se pudo guardar. ¿Conexión a internet?');
+    alert('⚠️ No se pudo guardar.');
   }
 }
 
@@ -156,7 +145,7 @@ function initModal() {
       return;
     }
 
-    const carta = todasLasCartas.find(c => c.id === id);
+    const carta = cartasBase.find(c => c.id === id);
     if (!carta) {
       msg.textContent = `❌ ID "${id}" no existe`;
       return;
@@ -210,7 +199,7 @@ function initCrearCarta() {
 
     try {
       const db = firebase.firestore();
-      await db.collection('cartasPersonalizadas').add({
+      const docRef = await db.collection('cartasPersonalizadas').add({
         nombre: n,
         tipo: t,
         imagen: imagen.value.trim() || null,
@@ -218,11 +207,18 @@ function initCrearCarta() {
         fecha: firebase.firestore.FieldValue.serverTimestamp()
       });
       
+      // Actualizar localmente sin recargar
+      cartasPersonalizadas.push({
+        id: docRef.id,
+        nombre: n,
+        tipo: t,
+        imagen: imagen.value.trim() || null,
+        creador: COLECCION_ID
+      });
+      
+      renderizarTodo();
       msg.textContent = '✅ ¡Carta creada!';
-      setTimeout(() => {
-        modal.style.display = 'none';
-        cargarApp();
-      }, 1000);
+      setTimeout(() => modal.style.display = 'none', 1000);
     } catch (err) {
       console.error('Error al crear carta:', err);
       msg.textContent = '❌ Error al guardar';
