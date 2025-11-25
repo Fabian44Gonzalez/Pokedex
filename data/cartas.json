@@ -1,0 +1,26 @@
+[
+  {
+    "id": "001",
+    "nombre": "Flamín",
+    "tipo": "Fuego",
+    "descripcion": "Criatura ardiente que adora los atardeceres.",
+    "imagen": "https://via.placeholder.com/100/ff5733/ffffff?text=001",
+    "rareza": "Común"
+  },
+  {
+    "id": "002",
+    "nombre": "Acuarel",
+    "tipo": "Agua",
+    "descripcion": "Nada en ríos helados y nunca se resfría.",
+    "imagen": "https://via.placeholder.com/100/3399ff/ffffff?text=002",
+    "rareza": "Rara"
+  },
+  {
+    "id": "003",
+    "nombre": "Folix",
+    "tipo": "Planta",
+    "descripcion": "Se mueve solo cuando hay brisa suave.",
+    "imagen": "https://via.placeholder.com/100/4cff33/000000?text=003",
+    "rareza": "Épica"
+  }
+]
