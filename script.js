@@ -1,20 +1,19 @@
 // --- CONFIGURACIÓN ---
-const COLECCION_ID = "cartadex_amigo_2025_xyz"; // ← ¡Cambia esto por un ID único!
+const COLECCION_ID = "cartadex_amigo_2025_xyz"; // ← ¡Cambia por un ID único!
 
 // --- VARIABLES ---
 let todasLasCartas = [];
 let cartasDesbloqueadas = new Set();
 
-// --- INICIAR APP ---
+// --- INICIAR ---
 document.addEventListener('DOMContentLoaded', () => {
-  initModal();       // Modal funciona INMEDIATAMENTE
-  cargarApp();       // Luego carga datos
+  initModal();
+  cargarApp();
 });
 
-// --- CARGAR TODO ---
+// --- CARGAR APP ---
 async function cargarApp() {
   try {
-    // Cargar cartas
     const res = await fetch('data/cartas.json');
     if (!res.ok) throw new Error('cartas.json no encontrado');
     todasLasCartas = await res.json();
@@ -25,7 +24,6 @@ async function cargarApp() {
     return;
   }
 
-  // Cargar progreso desde Firebase
   try {
     const db = firebase.firestore();
     const doc = await db.collection('publico').doc(COLECCION_ID).get();
@@ -61,13 +59,15 @@ function renderizarCartas() {
       <div class="carta-tipo">${desbloqueada ? carta.tipo : ''}</div>
     `;
 
+    // Solo las cartas bloqueadas responden al doble clic
     if (!desbloqueada) {
-      el.addEventListener('click', () => {
+      el.addEventListener('dblclick', () => {
         cartasDesbloqueadas.add(carta.id);
         guardarProgreso();
         renderizarTodo();
       });
     }
+
     galeria.appendChild(el);
   });
 }
@@ -80,7 +80,7 @@ function actualizarEstadisticas() {
   document.getElementById('desbloqueadas').textContent = desbloq;
 }
 
-// --- GUARDAR EN FIRESTORE ---
+// --- GUARDAR ---
 async function guardarProgreso() {
   try {
     const db = firebase.firestore();
@@ -94,7 +94,7 @@ async function guardarProgreso() {
   }
 }
 
-// --- MODAL: UNA SOLA FUNCIÓN, SIN DEPENDENCIAS ---
+// --- MODAL ---
 function initModal() {
   const modal = document.getElementById('modal');
   const btnAbrir = document.getElementById('btn-agregar');
@@ -103,7 +103,6 @@ function initModal() {
   const input = document.getElementById('input-id');
   const msg = document.getElementById('mensaje-modal');
 
-  // Asegurar que los elementos existen
   if (!btnAbrir || !modal || !btnConfirmar || !input || !msg) return;
 
   btnAbrir.onclick = () => {

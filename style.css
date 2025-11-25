@@ -164,3 +164,19 @@ button:hover {
   color: #ff0;
   font-weight: bold;
 }
+
+/* Pista para doble clic */
+.carta.bloqueada:hover::after {
+  content: "Doble clic para desbloquear";
+  position: absolute;
+  bottom: -25px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: #0f0;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  pointer-events: none;
+}
