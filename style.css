@@ -27,6 +27,22 @@ header {
   margin-bottom: 20px;
   padding-bottom: 15px;
   border-bottom: 2px solid #0f0;
+  position: relative;
+}
+
+#btn-admin {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: #333;
+  color: #ff0;
+  border: 1px solid #ff0;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  font-size: 0.7rem;
+  cursor: pointer;
+  padding: 0;
 }
 
 header h1 {
@@ -133,23 +149,6 @@ button:hover {
   background: #030;
 }
 
-/* Botón de administración */
-#btn-admin {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background: #333;
-  color: #ff0;
-  border: 1px solid #ff0;
-  border-radius: 50%;
-  width: 30px;
-  height: 30px;
-  font-size: 0.7rem;
-  cursor: pointer;
-  padding: 0;
-}
-
-/* --- Modal --- */
 .modal {
   display: none;
   position: fixed;
@@ -182,14 +181,7 @@ button:hover {
   cursor: pointer;
 }
 
-#input-id,
-#crear-nombre,
-#crear-tipo,
-#crear-imagen,
-#admin-id,
-#admin-nombre,
-#admin-tipo,
-#admin-imagen {
+input {
   width: 100%;
   padding: 8px;
   margin: 8px 0;
@@ -197,6 +189,7 @@ button:hover {
   background: #000;
   color: #0f0;
   text-align: center;
+  font-family: 'Courier New', monospace;
 }
 
 #mensaje-modal,
