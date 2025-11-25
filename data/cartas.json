@@ -22,5 +22,13 @@
     "descripcion": "Se mueve solo cuando hay brisa suave.",
     "imagen": "https://via.placeholder.com/100/4cff33/000000?text=003",
     "rareza": "Épica"
+  },
+{
+    "id": "004",
+    "nombre": "Pepe",
+    "tipo": "Agua",
+    "descripcion": "Se mueve solo cuando hay brisa suave.",
+    "imagen": "https://via.placeholder.com/100/4cff33/000000?text=003",
+    "rareza": "Épica"
   }
 ]
