@@ -7,39 +7,41 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="pokedex" id="app">
+  <div class="pokedex">
     <header>
       <h1>🔍 CartaDex Digital</h1>
       <p>Tu colección personal</p>
     </header>
+
     <div class="stats">
       <span id="progreso">0%</span> completado • 
       <span id="desbloqueadas">0</span>/<span id="total">0</span> cartas
     </div>
+
     <main id="galeria-cartas">
       <p>Cargando colección...</p>
     </main>
+
     <footer>
       <button id="btn-agregar">➕ Añadir carta por ID</button>
     </footer>
   </div>
 
-  <!-- Modal para añadir carta -->
+  <!-- Modal único -->
   <div id="modal" class="modal">
     <div class="modal-contenido">
       <span class="cerrar">&times;</span>
-      <h3>Añadir carta a tu colección</h3>
-      <p>Ingresa el <strong>ID</strong> de la carta (ej: 001, 002...)</p>
-      <input type="text" id="input-id" placeholder="Ej: 004" maxlength="10" />
+      <h3>Añadir carta</h3>
+      <p>Ingresa el ID de la carta (ej: 001)</p>
+      <input type="text" id="input-id" placeholder="ID de la carta" maxlength="10" />
       <div id="mensaje-modal"></div>
       <button id="btn-confirmar">✅ Desbloquear</button>
     </div>
   </div>
 
-  <!-- Firebase SDK -->
+  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyBGhygF-sPTOp3IZ0f5wO5FlpW62Tl3-BA",
@@ -51,7 +53,6 @@
     };
     firebase.initializeApp(firebaseConfig);
   </script>
-
-  <script src="script.js"></script>
+  <script src="script.js" defer></script>
 </body>
 </html>
