@@ -8,15 +8,24 @@
 </head>
 <body>
   <div class="pokedex" id="app">
-    <!-- Contenido dinámico cargado por script.js -->
+    <header>
+      <h1>🔍 CartaDex Digital</h1>
+      <p>Tu colección personal</p>
+    </header>
+    <div class="stats">
+      <span id="progreso">0%</span> completado • 
+      <span id="desbloqueadas">0</span>/<span id="total">0</span> cartas
+    </div>
+    <main id="galeria-cartas">
+      <p>Cargando colección...</p>
+    </main>
   </div>
 
-  <!-- Firebase SDK -->
+  <!-- Firebase SDK (solo Firestore) -->
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
-  <!-- Configuración de tu proyecto Firebase -->
+  <!-- Configuración de Firebase -->
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyBGhygF-sPTOp3IZ0f5wO5FlpW62Tl3-BA",
@@ -24,11 +33,8 @@
       projectId: "digitalpokedex-cd90d",
       storageBucket: "digitalpokedex-cd90d.firebasestorage.app",
       messagingSenderId: "57262092932",
-      appId: "1:57262092932:web:2b898837fc81f1255ec8d1",
-      measurementId: "G-7KB36JM6E8"
+      appId: "1:57262092932:web:2b898837fc81f1255ec8d1"
     };
-
-    // Inicializar Firebase
     firebase.initializeApp(firebaseConfig);
   </script>
 
