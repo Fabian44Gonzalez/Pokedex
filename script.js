@@ -1,4 +1,5 @@
 const COLECCION_ID = "cartadex_amigo_2025_xyz";
+const ADMIN_ID = "admin_cartadex_2025"; // ← debe coincidir con las reglas de Firestore
 
 let cartasBase = [];
 let cartasDesbloqueadas = new Set();
@@ -7,28 +8,25 @@ let cartasPersonalizadas = [];
 document.addEventListener('DOMContentLoaded', () => {
   initModal();
   initCrearCarta();
+  initAdminPanel();
   cargarApp();
 });
 
 async function cargarApp() {
   try {
     const db = firebase.firestore();
-    
-    // Cargar cartas base
     const snapBase = await db.collection('cartasBase').get();
     cartasBase = [];
     snapBase.forEach(doc => {
       cartasBase.push({ id: doc.id, ...doc.data() });
     });
 
-    // Cargar progreso
     const docProgreso = await db.collection('publico').doc(COLECCION_ID).get();
     if (docProgreso.exists) {
       const data = docProgreso.data();
       cartasDesbloqueadas = new Set(data.cartas || []);
     }
 
-    // Cargar cartas personalizadas
     const snapPersonalizadas = await db
       .collection('cartasPersonalizadas')
       .where('creador', '==', COLECCION_ID)
@@ -55,13 +53,11 @@ function renderizarCartas() {
   const galeria = document.getElementById('galeria-cartas');
   galeria.innerHTML = '';
 
-  // Cartas base
   cartasBase.forEach(carta => {
     const desbloqueada = cartasDesbloqueadas.has(carta.id);
     renderizarCarta(carta, desbloqueada, false);
   });
 
-  // Cartas personalizadas
   cartasPersonalizadas.forEach(carta => {
     renderizarCarta(carta, true, true);
   });
@@ -166,7 +162,7 @@ function initModal() {
   input.onkeypress = (e) => { if (e.key === 'Enter') btnConfirmar.click(); };
 }
 
-// --- Modal: Crear carta ---
+// --- Modal: Crear carta personalizada ---
 function initCrearCarta() {
   const modal = document.getElementById('modal-crear');
   const btnAbrir = document.getElementById('btn-crear');
@@ -207,7 +203,6 @@ function initCrearCarta() {
         fecha: firebase.firestore.FieldValue.serverTimestamp()
       });
       
-      // Actualizar localmente sin recargar
       cartasPersonalizadas.push({
         id: docRef.id,
         nombre: n,
@@ -222,6 +217,64 @@ function initCrearCarta() {
     } catch (err) {
       console.error('Error al crear carta:', err);
       msg.textContent = '❌ Error al guardar';
+    }
+  };
+}
+
+// --- Panel de administración ---
+function initAdminPanel() {
+  const btnAdmin = document.getElementById('btn-admin');
+  const modal = document.getElementById('modal-admin');
+  const btnCerrar = document.getElementById('cerrar-admin');
+  const btnGuardar = document.getElementById('btn-guardar-admin');
+  const id = document.getElementById('admin-id');
+  const nombre = document.getElementById('admin-nombre');
+  const tipo = document.getElementById('admin-tipo');
+  const imagen = document.getElementById('admin-imagen');
+  const msg = document.getElementById('mensaje-admin');
+
+  if (!btnAdmin || !modal) return;
+
+  btnAdmin.onclick = () => {
+    id.value = ''; nombre.value = ''; tipo.value = ''; imagen.value = '';
+    msg.textContent = '';
+    modal.style.display = 'block';
+    id.focus();
+  };
+
+  btnCerrar?.onclick = () => modal.style.display = 'none';
+  modal.onclick = (e) => { if (e.target === modal) modal.style.display = 'none'; };
+
+  btnGuardar?.onclick = async () => {
+    const i = id.value.trim();
+    const n = nombre.value.trim();
+    const t = tipo.value.trim();
+    if (!i || !n || !t) {
+      msg.textContent = '⚠️ ID, nombre y tipo obligatorios';
+      return;
+    }
+
+    if (cartasBase.some(c => c.id === i)) {
+      msg.textContent = `❌ ID "${i}" ya existe`;
+      return;
+    }
+
+    try {
+      const db = firebase.firestore();
+      await db.collection('cartasBase').doc(i).set({
+        nombre: n,
+        tipo: t,
+        imagen: imagen.value.trim() || null,
+        adminId: ADMIN_ID
+      });
+      
+      cartasBase.push({ id: i, nombre: n, tipo: t, imagen: imagen.value.trim() || null });
+      renderizarTodo();
+      msg.textContent = '✅ ¡Carta base publicada!';
+      setTimeout(() => modal.style.display = 'none', 1200);
+    } catch (err) {
+      console.error('Error al crear carta base:', err);
+      msg.textContent = '❌ Permiso denegado (¿ADMIN_ID correcto?)';
     }
   };
 }

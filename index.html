@@ -9,6 +9,7 @@
 <body>
   <div class="pokedex">
     <header>
+      <button id="btn-admin" style="position:absolute;top:10px;right:10px;font-size:0.7rem;">⚙️</button>
       <h1>🔍 CartaDex Digital</h1>
       <p>Tu colección personal</p>
     </header>
@@ -40,16 +41,30 @@
     </div>
   </div>
 
-  <!-- Modal: Crear carta -->
+  <!-- Modal: Crear carta personalizada -->
   <div id="modal-crear" class="modal">
     <div class="modal-contenido">
       <span class="cerrar" id="cerrar-crear">&times;</span>
       <h3>Crear nueva carta</h3>
-      <input type="text" id="crear-nombre" placeholder="Nombre *" maxlength="30" />6
+      <input type="text" id="crear-nombre" placeholder="Nombre *" maxlength="30" />
       <input type="text" id="crear-tipo" placeholder="Tipo *" maxlength="20" />
       <input type="text" id="crear-imagen" placeholder="URL de imagen (opcional)" />
       <div id="mensaje-crear"></div>
       <button id="btn-guardar-crear">💾 Guardar carta</button>
+    </div>
+  </div>
+
+  <!-- Modal: Admin - Crear carta base -->
+  <div id="modal-admin" class="modal">
+    <div class="modal-contenido">
+      <span class="cerrar" id="cerrar-admin">&times;</span>
+      <h3>🛠️ Crear carta base</h3>
+      <input type="text" id="admin-id" placeholder="ID (ej: 010)" maxlength="10" />
+      <input type="text" id="admin-nombre" placeholder="Nombre *" maxlength="30" />
+      <input type="text" id="admin-tipo" placeholder="Tipo *" maxlength="20" />
+      <input type="text" id="admin-imagen" placeholder="URL de imagen" />
+      <div id="mensaje-admin"></div>
+      <button id="btn-guardar-admin">💾 Publicar carta</button>
     </div>
   </div>
 

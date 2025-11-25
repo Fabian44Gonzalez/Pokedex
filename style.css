@@ -19,6 +19,7 @@ body {
   border-radius: 20px;
   padding: 20px;
   box-shadow: 0 0 20px rgba(229, 0, 0, 0.7);
+  position: relative;
 }
 
 header {
@@ -132,6 +133,23 @@ button:hover {
   background: #030;
 }
 
+/* Botón de administración */
+#btn-admin {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: #333;
+  color: #ff0;
+  border: 1px solid #ff0;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  font-size: 0.7rem;
+  cursor: pointer;
+  padding: 0;
+}
+
+/* --- Modal --- */
 .modal {
   display: none;
   position: fixed;
@@ -167,7 +185,11 @@ button:hover {
 #input-id,
 #crear-nombre,
 #crear-tipo,
-#crear-imagen {
+#crear-imagen,
+#admin-id,
+#admin-nombre,
+#admin-tipo,
+#admin-imagen {
   width: 100%;
   padding: 8px;
   margin: 8px 0;
@@ -178,7 +200,8 @@ button:hover {
 }
 
 #mensaje-modal,
-#mensaje-crear {
+#mensaje-crear,
+#mensaje-admin {
   min-height: 1.2rem;
   margin: 10px 0;
   color: #ff0;
